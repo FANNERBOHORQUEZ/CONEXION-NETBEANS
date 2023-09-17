@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.java.j2seproject</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
+            <name>multiservicios</name>
+            <source-roots>
+                <root id="src.dir"/>
+            </source-roots>
+            <test-roots>
+                <root id="test.src.dir"/>
+            </test-roots>
+        </data>
+    </configuration>
+</project>
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CLIENTE BL
+
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package multiservicios.clienteBL;
+
+import com.mysql.cj.jdbc.CallableStatement;
+import com.sun.jdi.connect.spi.Connection;
+import java.beans.Statement;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import multiservicios.clienteDAL.conexionDAL;
+import java.sql.ResultSet;
+import java.sql.PreparedStatement;
+import javax.swing.JTable;
+import javax.swing.event.TableModelEvent;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
+
+/**
+ *
+ * @author jorge
+ */
+
+public class clienteBL {
+    int ID;
+    String Nombre, Apellido, Telefono, Correo;
+
+    public int getID() {
+        return ID;
+    }
+
+    public void setID(int ID) {
+        this.ID = ID;
+    }
+
+    public String getNombre() {
+        return Nombre;
+    }
+
+    public void setNombre(String Nombre) {
+        this.Nombre = Nombre;
+    }
+
+    public String getApellido() {
+        return Apellido;
+    }
+
+    public void setApellido(String Apellido) {
+        this.Apellido = Apellido;
+    }
+
+    public String getTelefono() {
+        return Telefono;
+    }
+
+    public void setTelefono(String Telefono) {
+        this.Telefono = Telefono;
+    }
+
+    public String getCorreo() {
+        return Correo;
+    }
+
+    public void setCorreo(String Correo) {
+        this.Correo = Correo;
+    }
+   
+    /*codigo para insertar cliente*/
+    
+  public void insertarcliente(JTextField paramNombre, JTextField paramApellido, JTextField paramTelefono, JTextField paramCorreo){
+  
+      setNombre(paramNombre.getText());
+      setApellido(paramApellido.getText());
+      setTelefono(paramTelefono.getText());
+      setCorreo(paramCorreo.getText());
+      
+      conexionDAL Objconexion = new conexionDAL();
+      
+      String consulta ="insert into cliente (nombre,apellido,telefono,correo) values (?,?,?,?);";
+      
+      try {
+          
+          CallableStatement cs = (CallableStatement) Objconexion.establececonexion().prepareCall(consulta);
+          
+          cs.setString(1, getNombre());
+          cs.setString(2, getApellido());
+          cs.setString(3, getTelefono());
+          cs.setString(4, getCorreo());
+          
+          cs.execute();
+          
+          JOptionPane.showMessageDialog(null, "se inserto correctamente el cliente");
+          
+          
+      } catch (Exception e) {
+          JOptionPane.showMessageDialog(null, "no se inserto correctamente el cliente, error:"+e.toString());
+          
+      }
+  } 
+  
+  
+  /*codigo para mostrar cliente*/
+ public void mostrarClientes(JTable paramtablatotalcliente) {
+    conexionDAL Objconexion = new conexionDAL();
+    
+     DefaultTableModel modelo = new DefaultTableModel();
+     
+    TableRowSorter<TableModel> ordenartabla = new TableRowSorter<>();
+     paramtablatotalcliente.setRowSorter(ordenartabla);
+     
+     modelo.addColumn("id");
+     modelo.addColumn("Nombre");
+     modelo.addColumn("Apellido");
+     modelo.addColumn("Telefono");
+     modelo.addColumn("correo");
+     
+    String consulta = "SELECT * FROM cliente";
+    
+    String[] datos = new String[5];
+    
+    try {
+        java.sql.Connection conn = Objconexion.establececonexion();
+        java.sql.Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(consulta);
+        
+        while (rs.next()) {
+                   
+           int id = rs.getInt("ID");
+            String nombre = rs.getString("nombre");
+            String apellido = rs.getString("apellido");
+            String telefono = rs.getString("telefono");
+            String correo = rs.getString("correo");
+            
+           /* datos[0] = rs.getString(id);
+            datos[1] = rs.getString(nombre);
+            datos[2] = rs.getString(apellido);
+            datos[3] = rs.getString(telefono);
+            datos[4] = rs.getString(correo);*/
+            
+            modelo.addRow(datos);
+            
+            // Display client data as needed (e.g., print to console or update UI elements).
+           System.out.println("ID: " + id + ", Nombre: " + nombre + ", Apellido: " + apellido + ", Teléfono: " + telefono + ", Correo: " + correo);
+        }
+        
+        paramtablatotalcliente.setModel(modelo);
+        
+       rs.close();
+        stmt.close();
+        conn.close();
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(null, "Error al mostrar clientes: " + e.toString());
+    }
+}
+ 
+
+ 
+ 
+ 
+ /*codigo para modificar cliente*/
+ 
+ public void actualizarCliente(int clienteID, String nuevoNombre, String nuevoApellido, String nuevoTelefono, String nuevoCorreo) {
+    conexionDAL Objconexion = new conexionDAL();
+    String consulta = "UPDATE cliente SET nombre=?, apellido=?, telefono=?, correo=? WHERE ID=?";
+    
+    try {
+        java.sql.Connection conn = Objconexion.establececonexion();
+        PreparedStatement pstmt = conn.prepareStatement(consulta);
+        
+        pstmt.setString(1, nuevoNombre);
+        pstmt.setString(2, nuevoApellido);
+        pstmt.setString(3, nuevoTelefono);
+        pstmt.setString(4, nuevoCorreo);
+        pstmt.setInt(5, clienteID);
+        
+        int rowsUpdated = pstmt.executeUpdate();
+        if (rowsUpdated > 0) {
+            JOptionPane.showMessageDialog(null, "Cliente actualizado correctamente.");
+        } else {
+            JOptionPane.showMessageDialog(null, "No se pudo actualizar el cliente.");
+        }
+        
+        pstmt.close();
+        conn.close();
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(null, "Error al actualizar el cliente: " + e.toString());
+    }
+}
+
+ 
+ 
+ 
+ 
+ /*codigo para eliminar cliente*/
+public void eliminarCliente(int clienteID) {
+    conexionDAL Objconexion = new conexionDAL();
+    String consulta = "DELETE FROM cliente WHERE ID=?";
+    
+    try {
+        java.sql.Connection conn = Objconexion.establececonexion();
+        PreparedStatement pstmt = conn.prepareStatement(consulta);
+        
+        pstmt.setInt(1, clienteID);
+        
+        int rowsDeleted = pstmt.executeUpdate();
+        if (rowsDeleted > 0) {
+            JOptionPane.showMessageDialog(null, "Cliente eliminado correctamente.");
+        } else {
+            JOptionPane.showMessageDialog(null, "No se pudo eliminar el cliente.");
+        }
+        
+        pstmt.close();
+        conn.close();
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(null, "Error al eliminar el cliente: " + e.toString());
+    }
+}
+
+
+ 
+}
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CLIENTE DAL
+
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package multiservicios.clienteDAL;
+
+/**
+ *
+ * @author jorge
+ */
+import java.awt.HeadlessException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
+
+
+public class conexionDAL {
+    
+    Connection conectar = null;
+    
+    String usuario = "root";
+    String contraseña = "Jg12345";
+    String bd = "multiservicios1";
+    String ip = "localhost";
+    String puerto = "3306";
+    
+    String cadena = "jdbc:mysql://"+ip+":"+puerto+"/"+bd;
+    
+    public Connection establececonexion(){
+    
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conectar=DriverManager.getConnection(cadena,usuario,contraseña);
+            JOptionPane.showMessageDialog(null,"la conexion se ha realizado con exito");
+        } catch (HeadlessException | ClassNotFoundException | SQLException e) {
+            JOptionPane.showMessageDialog(null,"error al conectarse a la base de datos"+e.toString());
+        }
+        return conectar;
+    }
+    
+}
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CLIENTE GUI
+
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package multiservicios.clienteGUI;
+
+import multiservicios.clienteBL.clienteBL;
+import multiservicios.clienteDAL.conexionDAL;
+
+/**
+ *
+ * @author jorge
+ */
+public class frmcliente extends javax.swing.JFrame {
+
+    /**
+     * Creates new form frmcliente
+     */
+    public frmcliente() {
+        initComponents();
+        /*prueva de conexion*/
+       /* conexionDAL Objconexion = new conexionDAL();
+        Objconexion.establececonexion();*/
+       clienteBL objetocliente = new clienteBL();
+       objetocliente.mostrarClientes(tbtotalcliente);
+       
+       
+    
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jScrollPane1 = new javax.swing.JScrollPane();
+        tbtotalcliente = new javax.swing.JTable();
+        ID = new javax.swing.JLabel();
+        btnGuardar = new javax.swing.JButton();
+        btnModificar = new javax.swing.JButton();
+        btnEliminar = new javax.swing.JButton();
+        textID = new javax.swing.JTextField();
+        Nombre = new javax.swing.JLabel();
+        textNombre = new javax.swing.JTextField();
+        textApellido = new javax.swing.JTextField();
+        TextTelefono = new javax.swing.JTextField();
+        Apellido = new javax.swing.JLabel();
+        Telefono = new javax.swing.JLabel();
+        Correo = new javax.swing.JLabel();
+        TextCorreo = new javax.swing.JTextField();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jScrollPane1.setViewportView(tbtotalcliente);
+
+        ID.setText("ID:");
+
+        btnGuardar.setText("Guardar");
+        btnGuardar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnGuardarActionPerformed(evt);
+            }
+        });
+
+        btnModificar.setText("Modificar");
+        btnModificar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnModificarActionPerformed(evt);
+            }
+        });
+
+        btnEliminar.setText("Eliminar");
+
+        Nombre.setText("Nombre:");
+
+        Apellido.setText("Apellido:");
+
+        Telefono.setText("Telefono:");
+
+        Correo.setText("Correo:");
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(Correo)
+                    .addComponent(Nombre)
+                    .addComponent(Apellido)
+                    .addComponent(Telefono)
+                    .addComponent(ID)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 439, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textID, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 23, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(btnGuardar)
+                        .addGap(72, 72, 72)
+                        .addComponent(btnModificar)
+                        .addGap(60, 60, 60)
+                        .addComponent(btnEliminar))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(textNombre, javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(textApellido, javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(TextTelefono, javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                            .addGap(1, 1, 1)
+                            .addComponent(TextCorreo, javax.swing.GroupLayout.PREFERRED_SIZE, 366, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(ID)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(textID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(Nombre)
+                .addGap(4, 4, 4)
+                .addComponent(textNombre, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(Apellido)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(textApellido, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(Telefono)
+                .addGap(3, 3, 3)
+                .addComponent(TextTelefono, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(Correo)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(TextCorreo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnGuardar)
+                    .addComponent(btnModificar)
+                    .addComponent(btnEliminar))
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
+      
+        clienteBL objetoclienteBL = new clienteBL();
+        objetoclienteBL.insertarcliente(textNombre, textApellido, TextTelefono, TextCorreo);
+    }//GEN-LAST:event_btnGuardarActionPerformed
+
+    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
+        clienteBL objetoclienteBL = new clienteBL();
+       /* objetoclienteBL.actualizarCliente(WIDTH, nuevoNombre, nuevoApellido, nuevoTelefono, nuevoCorreo);*/
+    }//GEN-LAST:event_btnModificarActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(frmcliente.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(frmcliente.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(frmcliente.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(frmcliente.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new frmcliente().setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    public javax.swing.JLabel Apellido;
+    public javax.swing.JLabel Correo;
+    public javax.swing.JLabel ID;
+    public javax.swing.JLabel Nombre;
+    public javax.swing.JLabel Telefono;
+    public javax.swing.JTextField TextCorreo;
+    public javax.swing.JTextField TextTelefono;
+    public javax.swing.JButton btnEliminar;
+    public javax.swing.JButton btnGuardar;
+    public javax.swing.JButton btnModificar;
+    private javax.swing.JScrollPane jScrollPane1;
+    public javax.swing.JTable tbtotalcliente;
+    public javax.swing.JTextField textApellido;
+    public javax.swing.JTextField textID;
+    public javax.swing.JTextField textNombre;
+    // End of variables declaration//GEN-END:variables
+}
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+MULTISERVICIOS 
+
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
+ */
+package multiservicios;
+
+import multiservicios.clienteGUI.frmcliente;
+
+/**
+ *
+ * @author jorge
+ */
+public class Multiservicios {
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        // TODO code application logic here
+        frmcliente objetoformulario = new frmcliente();
+        objetoformulario.setVisible(true);
+    }
+    
+}
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
